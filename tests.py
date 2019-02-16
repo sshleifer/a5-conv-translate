@@ -5,6 +5,8 @@ import unittest
 from highway import Highway
 from cnn import CNN
 
+MAX_WORD_LEN = 21
+
 class Tests(unittest.TestCase):
     def test_highway(self):
         e_word = 3
@@ -20,11 +22,11 @@ class Tests(unittest.TestCase):
 
     def test_cnn(self):
         e_word = 30
-        m_word = 10
+        m_word = MAX_WORD_LEN
         e_char = 50
         ones = np.ones((8, e_char, m_word))
         x = torch.Tensor(ones)
-        cnn_model = CNN(e_char, e_word)
+        cnn_model = CNN(e_char, e_word, MAX_WORD_LEN)
         out = cnn_model.forward(x)
         self.assertEqual(out.shape, (8, e_word))
 
