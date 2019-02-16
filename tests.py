@@ -18,11 +18,10 @@ class Tests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             model.forward(bad_input)
 
-
     def test_cnn(self):
         e_word = 30
-        m_word = 4
-        e_char = 20
+        m_word = 10
+        e_char = 50
         ones = np.ones((8, e_char, m_word))
         x = torch.Tensor(ones)
         cnn_model = CharConv(e_char, e_word)
@@ -35,3 +34,14 @@ class Tests(unittest.TestCase):
         mpool = torch.squeeze(torch.nn.MaxPool1d(kernel_size=5)(tensor))
         np.testing.assert_array_equal(mpool.numpy(),
                                       np.array([4, 9, 14, 19, 24]))
+
+
+    def test_cnn_k5(self):
+        e_word = 30
+        m_word = 4
+        e_char = 20
+        ones = np.ones((8, e_char, m_word))
+        x = torch.Tensor(ones)
+        cnn_model = CharConv(e_char, e_word, k=m_word-1)
+        #with self.assertRaises(RuntimeError):
+        out = cnn_model.forward(x)
