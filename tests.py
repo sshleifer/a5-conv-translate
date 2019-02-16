@@ -42,6 +42,6 @@ class Tests(unittest.TestCase):
         e_char = 20
         ones = np.ones((8, e_char, m_word))
         x = torch.Tensor(ones)
-        cnn_model = CharConv(e_char, e_word, k=m_word-1)
+        cnn_model = CharConv(e_char, e_word, k=m_word+1)
         #with self.assertRaises(RuntimeError):
         out = cnn_model.forward(x)
