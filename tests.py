@@ -29,6 +29,9 @@ class Tests(unittest.TestCase):
         out = cnn_model.forward(x)
         self.assertEqual(out.shape, (8, e_word))
 
-
-
-        pass
+    def test_max_pool_on_last_dim(self):
+        mock_arr = np.array(range(25)).reshape(1, 5, 5)
+        tensor = torch.Tensor(mock_arr)
+        mpool = torch.squeeze(torch.nn.MaxPool1d(kernel_size=5)(tensor))
+        np.testing.assert_array_equal(mpool.numpy(),
+                                      np.array([4, 9, 14, 19, 24]))
