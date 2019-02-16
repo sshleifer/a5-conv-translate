@@ -2,15 +2,15 @@ import numpy as np
 import torch
 import unittest
 
-from highway import HighwayNetwork
-from cnn import CharConv
+from highway import Highway
+from cnn import CNN
 
 class Tests(unittest.TestCase):
     def test_highway(self):
         e_word = 3
         ones = np.ones((8,e_word))
         x = torch.Tensor(ones)
-        model = HighwayNetwork(e_word)
+        model = Highway(e_word)
         out = model.forward(x)
         self.assertEqual(out.shape, (8,3))
 
@@ -24,7 +24,7 @@ class Tests(unittest.TestCase):
         e_char = 50
         ones = np.ones((8, e_char, m_word))
         x = torch.Tensor(ones)
-        cnn_model = CharConv(e_char, e_word)
+        cnn_model = CNN(e_char, e_word)
         out = cnn_model.forward(x)
         self.assertEqual(out.shape, (8, e_word))
 
@@ -41,6 +41,9 @@ class Tests(unittest.TestCase):
         e_char = 20
         ones = np.ones((8, e_char, m_word))
         x = torch.Tensor(ones)
-        cnn_model = CharConv(e_char, e_word, k=m_word+1)
+        cnn_model = CNN(e_char, e_word, k=m_word + 1)
         with self.assertRaises(RuntimeError):
             cnn_model.forward(x)
+
+    def test_1j(self):
+        pass
