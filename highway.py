@@ -18,6 +18,7 @@ class Highway(nn.Module):
         self.sigmoid = torch.nn.Sigmoid()
 
     def forward(self, xconv_out):
+        """Excpects inputs like (batch_size, e_word), outputs of same shape"""
         xproj = nn.ReLU()(self.proj(xconv_out))
         #print(xproj)
         xgate = self.sigmoid(self.proj(xconv_out))
@@ -25,5 +26,5 @@ class Highway(nn.Module):
         xhighway = xgate*xproj + (1 - xgate) * xconv_out
         #print(xhighway)
         xword_emb = self.dropout(xhighway)
-        #print(xword_emb)
+        print(f'Highway: xword_emb: {xword_emb.shape}')
         return xword_emb

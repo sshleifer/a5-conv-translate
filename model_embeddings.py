@@ -21,7 +21,6 @@ from cnn import CNN
 from highway import Highway
 
 # End "do not change"
-EWORD = 300
 
 class ModelEmbeddings(nn.Module): 
     """
@@ -37,8 +36,8 @@ class ModelEmbeddings(nn.Module):
         pad_token_idx = vocab['<pad>']
         self.char_embeddings = nn.Embedding(len(vocab), embed_size, padding_idx=pad_token_idx)
         self.dropout = nn.Dropout(.3)
-        self.cnn = CNN(embed_size, EWORD)
-        self.highway = Highway(EWORD)
+        self.cnn = CNN(embed_size, embed_size)
+        self.highway = Highway(embed_size)
 
     def forward(self, input):
         """
@@ -55,9 +54,9 @@ class ModelEmbeddings(nn.Module):
         #char_emb_tp = char_emb.transpose(0, 1)
         # import ipdb; ipdb.set_trace()
 
-        (sentence_length, batch_size, max_word_length, embed_size) = char_emb.shape
+        (sentence_length, batch_size, max_word_length, e_char) = char_emb.shape
         char_emb_reshape = char_emb.reshape(sentence_length * batch_size, max_word_length,
-                                            embed_size)
+                                            e_char)
         print(f'char_emb: {char_emb.shape}')#REMOVE ME
         print(f'char_emb reshape: {char_emb_reshape.shape}')  # REMOVE ME
 
@@ -65,9 +64,15 @@ class ModelEmbeddings(nn.Module):
         # need inputs like (batch_size, e_char, m_word) for conv
 
         xconv_out = self.cnn.forward(char_emb_reshape.transpose(1,2))
-        xconv_reshaped = xconv_out.reshape()
+        #xconv_reshaped = xconv_out.reshape()
         print(f'xconv_out: {xconv_out.shape}')
-        output = self.highway.forward(xconv_out) # ideally (sentence_length, batch_size, embed_size)
+        output = self.highway.forward(xconv_out)
+        e_word = xconv_out.shape[-1]
+        print(f'inferring e_word={e_word}')
+        output = output.reshape(sentence_length, batch_size, e_word) # ideally
+        print(f'ModelEmb  output: {output.shape} desired {(sentence_length, batch_size, e_word)}')
+
+        assert output.shape == (sentence_length, batch_size, e_word)
         return self.dropout(output)
         # right place for dropout?
 
