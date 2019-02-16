@@ -35,13 +35,12 @@ class Tests(unittest.TestCase):
         np.testing.assert_array_equal(mpool.numpy(),
                                       np.array([4, 9, 14, 19, 24]))
 
-
-    def test_cnn_k5(self):
+    def test_cnn_k_too_big(self):
         e_word = 30
         m_word = 4
         e_char = 20
         ones = np.ones((8, e_char, m_word))
         x = torch.Tensor(ones)
         cnn_model = CharConv(e_char, e_word, k=m_word+1)
-        #with self.assertRaises(RuntimeError):
-        out = cnn_model.forward(x)
+        with self.assertRaises(RuntimeError):
+            cnn_model.forward(x)
