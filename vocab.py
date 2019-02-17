@@ -140,7 +140,7 @@ class VocabEntry(object):
             ### END YOUR CODE
         if len(sents) > 0 and isinstance(sents[0], str):  # might be able to remove
             sents = [sents]
-        print('sents: {}'.format(sents))
+
         return [[
             [1] + [self.char2id.get(char, self.char_unk_id) for char in w] + [2]
             for w in sent
@@ -154,9 +154,6 @@ class VocabEntry(object):
         @return word_ids (list[list[int]]): sentence(s) in indices
         """
         return [[self[w] for w in s] for s in sents]
-
-
-
 
     def indices2words(self, word_ids):
         """ Convert list of indices into words.
@@ -181,9 +178,10 @@ class VocabEntry(object):
         max_len = max(len(s) for s in sents)
         batch_size = len(sents)
         char_sents = self.words2charindices(sents)
-        char_sents = pad_sents_char(char_sents)
+        char_sents = pad_sents_char(char_sents, self[PAD])
         tensor = torch.tensor(char_sents).reshape(max_len, batch_size, MAX_WORD_LENGTH)
         return tensor
+
     def to_input_tensor(self, sents: List[List[str]], device: torch.device) -> torch.Tensor:
         """ Convert list of sentences (words) into tensor with necessary padding for 
         shorter sentences.
