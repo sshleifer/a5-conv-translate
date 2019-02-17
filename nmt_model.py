@@ -77,6 +77,7 @@ class NMT(nn.Module):
         # Compute sentence lengths
         source_lengths = [len(s) for s in source]
         batch_size = len(source_lengths)
+        ## A4 code
         #char_tensor = self.vocab.to_input_tensor_char(source)
         #source_padded_chars = pad_sents_char(source)
         #target_padded_chars = pad_sents_char(target)
@@ -85,23 +86,15 @@ class NMT(nn.Module):
 
 
         # Convert list of lists into tensors
-
-        ## A4 code
-        # source_padded = self.vocab.src.to_input_tensor(source, device=self.device)   # Tensor: (src_len, b)
-        source_padded = None
-        #source_padded_chars = None
-        target_padded_chars = self.vocab.src.to_input_tensor_char(target, self.device)
         source_padded_chars = self.vocab.src.to_input_tensor_char(source, self.device)
+        target_padded_chars = self.vocab.src.to_input_tensor_char(target, self.device)
+        target_padded = self.vocab.tgt.to_input_tensor(target, device=self.device)  # (tgt_len, b)
         # (max_sentence_length, batch_size, MAX_WORD_LENGTH)
         if source_padded_chars.shape[1] != batch_size:
             raise AssertionError('source_padded_chars.shape[1] {} != batch_size {}'.format(
                 source_padded_chars.shape[1], batch_size))
-
-
         src_encodings, dec_init_state = self.encode(source_padded_chars, source_lengths)
 
-        target_padded = self.vocab.tgt.to_input_tensor(target, device=self.device)   # Tensor: (tgt_len, b)
- 
         #enc_hiddens, dec_init_state = self.encode(source_padded_chars, source_lengths)
         enc_masks = self.generate_sent_masks(src_encodings, source_lengths)
         combined_outputs = self.decode(src_encodings, enc_masks, dec_init_state, target_padded_chars)

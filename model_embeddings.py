@@ -53,14 +53,14 @@ class ModelEmbeddings(nn.Module):
         char_emb = self.char_embeddings(input)
         (sentence_length, batch_size, max_word_length, e_char) = char_emb.shape
         char_emb_reshape = char_emb.reshape(
-            sentence_length * batch_size, max_word_length, e_char)
+            sentence_length * batch_size, e_char, max_word_length)
         # need inputs like (batch_size, e_char, m_word) for conv
-        xconv_out = self.cnn.forward(char_emb_reshape.transpose(1, 2))
+        xconv_out = self.cnn.forward(char_emb_reshape)#.transpose(1, 2))
         output = self.highway.forward(xconv_out)
         e_word = xconv_out.shape[-1]
-        output = output.reshape(sentence_length, batch_size, e_word) # ideally
-        assert output.shape == (sentence_length, batch_size, e_word)
-        return self.dropout(output)
+        #output = output.reshape(sentence_length, batch_size, e_word) # ideally
+        #assert output.shape == (sentence_length, batch_size, e_word)
+        return self.dropout(output).reshape(sentence_length, batch_size, e_word)
         # right place for dropout?
 
 
