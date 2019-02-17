@@ -26,6 +26,20 @@ class ModelEmbeddings(nn.Module):
     """
     Class that converts input words to their CNN-based char_embeddings.
     """
+    def __init__(self, embed_size, vocab):
+        """
+        Init the Embedding layer for one language
+        @param embed_size (int): Embedding size (dimensionality) for the output
+        @param vocab (VocabEntry): VocabEntry object. See vocab.py for documentation.
+        """
+        super(ModelEmbeddings, self).__init__()
+        self.embed_size = embed_size
+        pad_token_idx = vocab['<pad>']
+        self.char_embeddings = nn.Embedding(len(vocab), embed_size, padding_idx=pad_token_idx)
+        self.dropout = nn.Dropout(.3)
+        self.cnn = CNN(embed_size, embed_size)
+        self.highway = Highway(embed_size)
+
     def forward(self, input):
         """
         Looks up character-based CNN char_embeddings for the words in a batch of sentences.
@@ -49,17 +63,4 @@ class ModelEmbeddings(nn.Module):
         return self.dropout(output)
         # right place for dropout?
 
-    def __init__(self, embed_size, vocab):
-        """
-        Init the Embedding layer for one language
-        @param embed_size (int): Embedding size (dimensionality) for the output
-        @param vocab (VocabEntry): VocabEntry object. See vocab.py for documentation.
-        """
-        super(ModelEmbeddings, self).__init__()
-        self.embed_size = embed_size
-        pad_token_idx = vocab['<pad>']
-        self.char_embeddings = nn.Embedding(len(vocab), embed_size, padding_idx=pad_token_idx)
-        self.dropout = nn.Dropout(.3)
-        self.cnn = CNN(embed_size, embed_size)
-        self.highway = Highway(embed_size)
 
