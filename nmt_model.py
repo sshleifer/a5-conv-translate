@@ -83,7 +83,7 @@ class NMT(nn.Module):
         #target_padded_chars = pad_sents_char(target)
 
         #self.model_embeddings_source.forward(char_repr)
-
+        # import ipdb; ipdb.set_trace()
 
         # Convert list of lists into tensors
         source_padded_chars = self.vocab.src.to_input_tensor_char(source, self.device)

@@ -33,7 +33,7 @@ class ModelEmbeddings(nn.Module):
         @param vocab (VocabEntry): VocabEntry object. See vocab.py for documentation.
         """
         super(ModelEmbeddings, self).__init__()
-        self.embed_size = embed_size
+        self.embed_size = embed_size  # e_char
         pad_token_idx = vocab['<pad>']
         self.char_embeddings = nn.Embedding(len(vocab), embed_size, padding_idx=pad_token_idx)
         self.dropout = nn.Dropout(.3)
@@ -52,10 +52,16 @@ class ModelEmbeddings(nn.Module):
         sentence_length, batch_size, mword = input.shape
         char_emb = self.char_embeddings(input)
         (sentence_length, batch_size, max_word_length, e_char) = char_emb.shape
-        char_emb_reshape = char_emb.reshape(
+        # nervous about this reshape.
+        # We want to make sure we are convolving over sentences not the ith word of every sentence
+        # so maybe we should: Transpose to get the batch dim in front
+
+
+        x_reshaped = char_emb.reshape(
             sentence_length * batch_size, e_char, max_word_length)
+        #(sentence_length * batch_size, e_char, max_word_length)
         # need inputs like (batch_size, e_char, m_word) for conv
-        xconv_out = self.cnn.forward(char_emb_reshape)#.transpose(1, 2))
+        xconv_out = self.cnn.forward(x_reshaped)#.transpose(1, 2))
         output = self.highway.forward(xconv_out)
         e_word = xconv_out.shape[-1]
         #output = output.reshape(sentence_length, batch_size, e_word) # ideally

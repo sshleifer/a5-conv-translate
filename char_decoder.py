@@ -18,11 +18,15 @@ class CharDecoder(nn.Module):
         """
 
         super(CharDecoder, self).__init__()
-        if False:
-            self.char_decoder = nn.LSTM()
-            self.char_output_projection = nn.Linear()
-            self.decoderCharEmb = nn.Embedding(padding_idx=0)
-            self.target_vocab = target_vocab
+        char_vocab_size = len(target_vocab.char2id)
+
+        self.charDecoder = nn.LSTM(input_size=char_embedding_size, hidden_size=hidden_size)
+        self.char_output_projection = nn.Linear(hidden_size, char_vocab_size, bias=True)
+        self.decoderCharEmb = nn.Embedding(char_vocab_size, char_embedding_size,
+                                           padding_idx=0)
+        self.target_vocab = target_vocab
+
+
 
         ### YOUR CODE HERE for part 2a
         ### TODO - Initialize as an nn.Module.
