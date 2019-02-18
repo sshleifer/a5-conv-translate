@@ -5,8 +5,10 @@
 CS224N 2018-19: Homework 5
 """
 
+import numpy as np
 import torch
 import torch.nn as nn
+
 
 class CharDecoder(nn.Module):
     def __init__(self, hidden_size, char_embedding_size=50, target_vocab=None):
@@ -25,6 +27,9 @@ class CharDecoder(nn.Module):
         self.decoderCharEmb = nn.Embedding(char_vocab_size, char_embedding_size,
                                            padding_idx=0)
         self.target_vocab = target_vocab
+        self.class_weights = torch.Tensor(np.ones(char_vocab_size))
+        self.class_weights[0] = 0  # ignore pad chars
+        self.ce_loss_fn = nn.CrossEntropyLoss(weight=self.class_weights)
 
 
 
@@ -39,9 +44,6 @@ class CharDecoder(nn.Module):
         ### Hint: - Use target_vocab.char2id to access the character vocabulary for the target language.
         ###       - Set the padding_idx argument of the embedding matrix.
         ###       - Create a new Embedding layer. Do not reuse char_embeddings created in Part 1 of this assignment.
-        
-
-        ### END YOUR CODE
 
 
     
@@ -56,27 +58,42 @@ class CharDecoder(nn.Module):
         """
         ### YOUR CODE HERE for part 2b
         ### TODO - Implement the forward pass of the character decoder.
-        
-        
-        ### END YOUR CODE 
-
+        embedded = self.decoderCharEmb(input)
+        ht, ct = self.charDecoder(embedded, dec_hidden)
+        st = self.char_output_projection(ht)
+        return st, ct
 
     def train_forward(self, char_sequence, dec_hidden=None):
         """ Forward computation during training.
 
-        @param char_sequence: tensor of integers, shape (length, batch). Note that "length" here and in forward() need not be the same.
-        @param dec_hidden: initial internal state of the LSTM, obtained from the output of the word-level decoder. A tuple of two tensors of shape (1, batch, hidden_size)
+        @param char_sequence: tensor of integers, shape (length, batch).
+            Note that "length" here and in forward() need not be the same.
+        @param dec_hidden: initial internal state of the LSTM, obtained from the output of the word-level decoder.
+            A tuple of two tensors of shape (1, batch, hidden_size)
 
-        @returns The cross-entropy loss, computed as the *sum* of cross-entropy losses of all the words in the batch.
+        @returns The cross-entropy loss, computed as the *sum* of cross-entropy
+        losses of all the words in the batch.
         """
+
+
+        loss_char_dec = 0
+        # what if diffferent than length expected by forward?
+        st, ct = self.forward(char_sequence, dec_hidden)
+        pt = nn.Softmax()(st) # do we need to do softmax?
+        batch_size = char_sequence.shape[1]
+        for b in range(batch_size): # for every word in the batch
+            true_chars = char_sequence[:,b]
+            preds = pt[:,b]
+            loss_char_dec = self.ce_loss_fn(preds, true_chars)
+        return loss_char_dec
+
         ### YOUR CODE HERE for part 2c
         ### TODO - Implement training forward pass.
         ###
         ### Hint: - Make sure padding characters do not contribute to the cross-entropy loss.
-        ###       - char_sequence corresponds to the sequence x_1 ... x_{n+1} from the handout (e.g., <START>,m,u,s,i,c,<END>).
+        ###    - char_sequence corresponds to the sequence x_1 ... x_{n+1} from the handout
+        #  (e.g., <START>,m,u,s,i,c,<END>).
 
-
-        ### END YOUR CODE
 
     def decode_greedy(self, initialStates, device, max_length=21):
         """ Greedy decoding
