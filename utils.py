@@ -37,11 +37,16 @@ def pad_sents_char(sents, char_pad_token):
         for w in s:
             pad_word = [char_pad_token] * MAX_WORD_LENGTH # new list
             pad_word[:len(w[:MAX_WORD_LENGTH])] = w[:MAX_WORD_LENGTH]
+            if w[-1] not in pad_word: # havent seen end token
+                pad_word[-1] = w[-1]  # END TOKEN?
+            assert len(pad_word) == MAX_WORD_LENGTH
+            assert pad_word[0] == 1
+            assert 2 in pad_word
             words.append(pad_word)
         # add pad words to get to max_sent_len
-        n_pad_words = max_sent_len - len(words)
+        needed_pad_words = max_sent_len - len(words)
         pad_word = [char_pad_token] * MAX_WORD_LENGTH
-        to_add = [pad_word] * n_pad_words
+        to_add = [pad_word] * needed_pad_words
         words.extend(to_add)
         assert len(words) == max_sent_len
         sents_padded.append(words)

@@ -138,11 +138,11 @@ class VocabEntry(object):
 
 
             ### END YOUR CODE
-        if len(sents) > 0 and isinstance(sents[0], str):  # might be able to remove
-            sents = [sents]
+        # if len(sents) > 0 and isinstance(sents[0], str):  # might be able to remove
+        #     sents = [sents]
 
         return [[
-            [1] + [self.char2id.get(char, self.char_unk_id) for char in w] + [2]
+            [1] + [self.char2id[char] for char in w] + [2]
             for w in sent
         ] for sent in sents]
 
@@ -179,7 +179,7 @@ class VocabEntry(object):
         batch_size = len(sents)
         char_sents = self.words2charindices(sents)
         char_sents = pad_sents_char(char_sents, self[PAD])
-        tensor = torch.tensor(char_sents).reshape(max_len, batch_size, MAX_WORD_LENGTH).to(device)
+        tensor = torch.tensor(char_sents, device=device).permute(1, 0, 2) # reshape to (max_len, batch_size, MAX_WORD_LENGTH).to(device)
         return tensor
 
     def to_input_tensor(self, sents: List[List[str]], device: torch.device) -> torch.Tensor:

@@ -37,10 +37,11 @@ class ModelEmbeddings(nn.Module):
         self.echar = 50
         k = 5
         self.m_word = 21
-        pad_token_idx = vocab['<pad>']
-        self.char_embeddings = nn.Embedding(len(vocab.char2id), self.echar, padding_idx=pad_token_idx)
+        pad_token_idx = vocab.char2id['<pad>']
+        self.char_embeddings = nn.Embedding(
+            len(vocab.char2id), self.echar, padding_idx=pad_token_idx)
         self.dropout = nn.Dropout(.3)
-        self.cnn = CNN(self.echar, embed_size)
+        self.cnn = CNN(self.echar, embed_size) # inchannels, out_channels
         self.highway = Highway(embed_size)
 
     def forward(self, input):
@@ -55,12 +56,11 @@ class ModelEmbeddings(nn.Module):
         sentence_length_1, batch_size_1, mword = input.shape
         char_emb = self.char_embeddings(input)
         (sentence_length, batch_size, max_word_length, e_char) = char_emb.shape
-        assert max_word_length == mword
+        assert max_word_length == mword == self.m_word
         assert max_word_length == 21
         assert sentence_length == sentence_length_1
         assert batch_size == batch_size_1
-        if e_char != self.echar:
-            import ipdb; ipdb.set_trace()
+        assert e_char == self.echar
         # nervous about this reshape.
         # We want to make sure we are convolving over sentences not the ith word of every sentence
         # so maybe we should: Transpose to get the batch dim in front
