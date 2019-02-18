@@ -89,7 +89,7 @@ class NMT(nn.Module):
         source_padded_chars = self.vocab.src.to_input_tensor_char(source, self.device)
         target_padded_chars = self.vocab.src.to_input_tensor_char(target, self.device)
         target_padded = self.vocab.tgt.to_input_tensor(target, device=self.device)  # (tgt_len, b)
-        # (max_sentence_length, batch_size, MAX_WORD_LENGTH)
+        # (max_sentence_length, batch_size, MAX_WORD_LENGT2H)
         if source_padded_chars.shape[1] != batch_size:
             raise AssertionError('source_padded_chars.shape[1] {} != batch_size {}'.format(
                 source_padded_chars.shape[1], batch_size))

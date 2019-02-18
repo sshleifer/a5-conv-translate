@@ -179,14 +179,7 @@ class VocabEntry(object):
         batch_size = len(sents)
         char_sents = self.words2charindices(sents)
         char_sents = pad_sents_char(char_sents, self[PAD])
-
-
-        try:
-            print(
-            f'char_sents: {torch.tensor(char_sents).shape} to {max_len, batch_size, MAX_WORD_LENGTH}')
-            tensor = torch.tensor(char_sents).reshape(max_len, batch_size, MAX_WORD_LENGTH).to(device)
-        except ValueError:
-            import ipdb; ipdb.set_trace()
+        tensor = torch.tensor(char_sents).reshape(max_len, batch_size, MAX_WORD_LENGTH).to(device)
         return tensor
 
     def to_input_tensor(self, sents: List[List[str]], device: torch.device) -> torch.Tensor:

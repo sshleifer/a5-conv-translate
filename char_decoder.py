@@ -30,7 +30,7 @@ class CharDecoder(nn.Module):
         self.class_weights = torch.Tensor(np.ones(char_vocab_size))
         self.class_weights[0] = 0  # ignore pad chars
         self.ce_loss_fn = nn.CrossEntropyLoss(weight=self.class_weights)
-
+        self.softmax = nn.Softmax(dim=-1)
 
 
         ### YOUR CODE HERE for part 2a
@@ -46,7 +46,6 @@ class CharDecoder(nn.Module):
         ###       - Create a new Embedding layer. Do not reuse char_embeddings created in Part 1 of this assignment.
 
 
-    
     def forward(self, input, dec_hidden=None):
         """ Forward pass of character decoder.
 
@@ -77,7 +76,7 @@ class CharDecoder(nn.Module):
         loss_char_dec = 0
         # what if different than length expected by forward?
         st, ct = self.forward(char_sequence, dec_hidden)
-        pt = nn.Softmax()(st)  # do we need to do softmax?
+        pt = self.softmax(st)  # do we need to do softmax?
         batch_size = char_sequence.shape[1]
         for b in range(batch_size):  # for every word in the batch
             true_chars = char_sequence[:, b]
@@ -104,12 +103,13 @@ class CharDecoder(nn.Module):
         batch_size = initialStates[0].shape[1]
         start_seed = np.array([self.target_vocab.start_of_word] * batch_size)
         current_char = torch.tensor(start_seed, dtype=torch.long).to(device).reshape(1, batch_size)
-        print(f'current_char: {current_char.shape}')
+        #  print(f'current_char: {current_char.shape}')
         output_word = []
         c = initialStates
         for t in range(max_length):
             st, c = self.forward(current_char, c)
-            pt = nn.Softmax()(st)
+            pt = self.softmax(st)
+
             if t == 0:
                 print(f'pt: {pt.shape}')
                 print(f'current_char: {current_char.shape}')
