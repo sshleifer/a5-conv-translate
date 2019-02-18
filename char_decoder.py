@@ -118,7 +118,7 @@ class CharDecoder(nn.Module):
                                 for x in current_char.detach().numpy()[0]])
         words = self.clip_from_end_char(output_word)
 
-        return words
+        return [''.join(w) for w in words]
             #h, c = self.forward()
 
         ### YOUR CODE HERE for part 2d
