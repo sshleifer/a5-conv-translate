@@ -74,8 +74,6 @@ class CharDecoder(nn.Module):
         @returns The cross-entropy loss, computed as the *sum* of cross-entropy
         losses of all the words in the batch.
         """
-
-
         loss_char_dec = 0
         # what if diffferent than length expected by forward?
         st, ct = self.forward(char_sequence, dec_hidden)
@@ -104,6 +102,26 @@ class CharDecoder(nn.Module):
         @returns decodedWords: a list (of length batch) of strings, each of which has length <= max_length.
                               The decoded strings should NOT contain the start-of-word and end-of-word characters.
         """
+        self.target_vocab.id2char
+        self.target_vocab.char2id
+        current_char = torch.ones(1,1, dtype=torch.long) # start
+        print(f'current_char: {current_char.shape}')
+        output_word = []
+        c = initialStates
+        for t in range(max_length):
+            st, c = self.forward(current_char, c)
+            pt = nn.Softmax()(st)
+            current_char, indices = torch.max(pt)
+            if current_char == 2: # end
+                print(f'END CHAR at t={t}')
+                break
+            output_word.append(current_char)
+
+        return [self.target_vocab.id2char[w] for w in output_word]
+            #h, c = self.forward()
+
+
+
 
         ### YOUR CODE HERE for part 2d
         ### TODO - Implement greedy decoding.
