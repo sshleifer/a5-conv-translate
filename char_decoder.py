@@ -22,7 +22,8 @@ class CharDecoder(nn.Module):
         super(CharDecoder, self).__init__()
         char_vocab_size = len(target_vocab.char2id)
 
-        self.charDecoder = nn.LSTM(input_size=char_embedding_size, hidden_size=hidden_size)
+        self.charDecoder = nn.LSTM(input_size=char_embedding_size, hidden_size=hidden_size,
+                                   bias=True)
         self.char_output_projection = nn.Linear(hidden_size, char_vocab_size, bias=True)
         self.decoderCharEmb = nn.Embedding(char_vocab_size, char_embedding_size,
                                            padding_idx=0)

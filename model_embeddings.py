@@ -34,10 +34,13 @@ class ModelEmbeddings(nn.Module):
         """
         super(ModelEmbeddings, self).__init__()
         self.embed_size = embed_size  # e_char
+        self.echar = 50
+        k = 5
+        self.m_word = 21
         pad_token_idx = vocab['<pad>']
-        self.char_embeddings = nn.Embedding(len(vocab.char2id), embed_size, padding_idx=pad_token_idx)
+        self.char_embeddings = nn.Embedding(len(vocab.char2id), self.echar, padding_idx=pad_token_idx)
         self.dropout = nn.Dropout(.3)
-        self.cnn = CNN(embed_size, embed_size)
+        self.cnn = CNN(self.echar, embed_size)
         self.highway = Highway(embed_size)
 
     def forward(self, input):
@@ -49,24 +52,35 @@ class ModelEmbeddings(nn.Module):
         @param output: Tensor of shape (sentence_length, batch_size, embed_size), containing the
             CNN-based char_embeddings for each word of the sentences in the batch
         """
-        sentence_length, batch_size, mword = input.shape
+        sentence_length_1, batch_size_1, mword = input.shape
         char_emb = self.char_embeddings(input)
         (sentence_length, batch_size, max_word_length, e_char) = char_emb.shape
+        assert max_word_length == mword
+        assert max_word_length == 21
+        assert sentence_length == sentence_length_1
+        assert batch_size == batch_size_1
+        if e_char != self.echar:
+            import ipdb; ipdb.set_trace()
         # nervous about this reshape.
         # We want to make sure we are convolving over sentences not the ith word of every sentence
         # so maybe we should: Transpose to get the batch dim in front
+        # Transpose(3,2) equivalent?
+        #print(f'char_emb.shape: {char_emb.shape}')
+        x_reshaped = char_emb.permute(0, 1, 3, 2)
+        #print(f'x_reshaped: {x_reshaped.shape}')
 
-
-        x_reshaped = char_emb.reshape(
+        x_reshaped = x_reshaped.reshape(
             sentence_length * batch_size, e_char, max_word_length)
+        #print(f'x_reshaped: {x_reshaped.shape}')
         #(sentence_length * batch_size, e_char, max_word_length)
         # need inputs like (batch_size, e_char, m_word) for conv
         xconv_out = self.cnn.forward(x_reshaped)#.transpose(1, 2))
         output = self.highway.forward(xconv_out)
         e_word = xconv_out.shape[-1]
+        assert e_word == self.embed_size
         #output = output.reshape(sentence_length, batch_size, e_word) # ideally
         #assert output.shape == (sentence_length, batch_size, e_word)
-        return self.dropout(output).reshape(sentence_length, batch_size, e_word)
+        return self.dropout(output).reshape(sentence_length, batch_size, self.embed_size)
         # right place for dropout?
 
 

@@ -15,7 +15,9 @@ class CNN(nn.Module):
         self.k = k
         self.e_word = eword
         self.conv = nn.Conv1d(
-            echar, eword, k, bias=True, stride=1, padding=0,
+            in_channels=echar, out_channels=eword, kernel_size=k,
+            #bias=True,
+            stride=1,
         )
         assert self.conv.weight.shape == (eword, echar, k)
         self.max_pool = nn.MaxPool1d(max_word_len - self.k + 1)
@@ -27,7 +29,7 @@ class CNN(nn.Module):
         xconv= nn.ReLU()(xconv)
         assert xconv.shape == (x.shape[0], self.e_word, m_word - self.k + 1)
         out = self.max_pool(xconv)
-        squoze = torch.squeeze(out)  # (batch_size, e_word)
+        squoze = out.squeeze(-1)  # (batch_size, e_word)
         # print(f'CNN: squoze.shape: {squoze.shape}, desired: {(x.shape[0], self.e_word)}')
         return squoze # we want fx m_word -k + 1
 
