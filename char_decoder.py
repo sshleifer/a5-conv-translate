@@ -75,13 +75,13 @@ class CharDecoder(nn.Module):
         losses of all the words in the batch.
         """
         loss_char_dec = 0
-        # what if diffferent than length expected by forward?
+        # what if different than length expected by forward?
         st, ct = self.forward(char_sequence, dec_hidden)
-        pt = nn.Softmax()(st) # do we need to do softmax?
+        pt = nn.Softmax()(st)  # do we need to do softmax?
         batch_size = char_sequence.shape[1]
-        for b in range(batch_size): # for every word in the batch
-            true_chars = char_sequence[:,b]
-            preds = pt[:,b]
+        for b in range(batch_size):  # for every word in the batch
+            true_chars = char_sequence[:, b]
+            preds = pt[:, b]
             loss_char_dec = self.ce_loss_fn(preds, true_chars)
         return loss_char_dec
 
@@ -92,7 +92,6 @@ class CharDecoder(nn.Module):
         ###    - char_sequence corresponds to the sequence x_1 ... x_{n+1} from the handout
         #  (e.g., <START>,m,u,s,i,c,<END>).
 
-
     def decode_greedy(self, initialStates, device, max_length=21):
         """ Greedy decoding
         @param initialStates: initial internal state of the LSTM, a tuple of two tensors of size (1, batch, hidden_size)
@@ -102,26 +101,25 @@ class CharDecoder(nn.Module):
         @returns decodedWords: a list (of length batch) of strings, each of which has length <= max_length.
                               The decoded strings should NOT contain the start-of-word and end-of-word characters.
         """
-        self.target_vocab.id2char
-        self.target_vocab.char2id
-        current_char = torch.ones(1,1, dtype=torch.long) # start
+        batch_size = initialStates[0].shape[1]
+        start_seed = np.array([self.target_vocab.start_of_word] * batch_size)
+        current_char = torch.tensor(start_seed, dtype=torch.long).to(device).reshape(1, batch_size)
         print(f'current_char: {current_char.shape}')
         output_word = []
         c = initialStates
         for t in range(max_length):
             st, c = self.forward(current_char, c)
             pt = nn.Softmax()(st)
-            current_char, indices = torch.max(pt)
-            if current_char == 2: # end
-                print(f'END CHAR at t={t}')
-                break
-            output_word.append(current_char)
+            if t == 0:
+                print(f'pt: {pt.shape}')
+                print(f'current_char: {current_char.shape}')
+            max_val, current_char = torch.max(pt, dim=-1)
+            output_word.append([self.target_vocab.id2char[x]
+                                for x in current_char.detach().numpy()[0]])
+        words = self.clip_from_end_char(output_word)
 
-        return [self.target_vocab.id2char[w] for w in output_word]
+        return words
             #h, c = self.forward()
-
-
-
 
         ### YOUR CODE HERE for part 2d
         ### TODO - Implement greedy decoding.
@@ -130,7 +128,19 @@ class CharDecoder(nn.Module):
         ###      - Use torch.tensor(..., device=device) to turn a list of character indices into a tensor.
         ###      - We use curly brackets as start-of-word and end-of-word characters. That is, use the character '{' for <START> and '}' for <END>.
         ###        Their indices are self.target_vocab.start_of_word and self.target_vocab.end_of_word, respectively.
-        
-        
+
+
         ### END YOUR CODE
+
+    def clip_from_end_char(self, output_word):
+        out = np.array(output_word).T
+        words = []
+        for i in out:
+            cur_word = []
+            for char in i:
+                if self.target_vocab.char2id[char] == self.target_vocab.end_of_word:
+                    break
+                cur_word.append(char)
+            words.append(cur_word)
+        return words
 
