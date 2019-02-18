@@ -35,7 +35,7 @@ class ModelEmbeddings(nn.Module):
         super(ModelEmbeddings, self).__init__()
         self.embed_size = embed_size  # e_char
         pad_token_idx = vocab['<pad>']
-        self.char_embeddings = nn.Embedding(len(vocab), embed_size, padding_idx=pad_token_idx)
+        self.char_embeddings = nn.Embedding(len(vocab.char2id), embed_size, padding_idx=pad_token_idx)
         self.dropout = nn.Dropout(.3)
         self.cnn = CNN(embed_size, embed_size)
         self.highway = Highway(embed_size)
