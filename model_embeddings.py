@@ -22,6 +22,9 @@ from highway import Highway
 
 # End "do not change"
 
+def numel_sum(model):
+    return sum(p.numel() for p in model.parameters())
+
 class ModelEmbeddings(nn.Module):
     """
     Class that converts input words to their CNN-based char_embeddings.
@@ -43,6 +46,18 @@ class ModelEmbeddings(nn.Module):
         self.dropout = nn.Dropout(.3)
         self.cnn = CNN(self.echar, embed_size) # inchannels, out_channels
         self.highway = Highway(embed_size)
+
+    @property
+    def parameter_counter(self):
+
+        return '''ModelEmbeddings.total_params: {}\n \
+        CharEmb Params: {} CNN Params: {}\nHighway Params: {}
+        Kwargs: {}, {} k=5,
+        '''.format(
+            numel_sum(self), numel_sum(self.char_embeddings), numel_sum(self.cnn),
+            numel_sum(self.highway), self.echar, self.embed_size,
+        )
+
 
     def forward(self, input):
         """

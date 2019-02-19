@@ -42,6 +42,8 @@ class NMT(nn.Module):
         super(NMT, self).__init__()
 
         self.model_embeddings_source = ModelEmbeddings(embed_size, vocab.src)
+        # print(self.model_embeddings_source.parameter_counter)
+
         self.model_embeddings_target = ModelEmbeddings(embed_size, vocab.tgt)
 
         self.hidden_size = hidden_size

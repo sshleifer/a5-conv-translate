@@ -223,7 +223,6 @@ class TestEverything(unittest.TestCase):
         """ Sanity check for CharDecoder.decode_greedy()
             basic shape check
         """
-
         decoder = self.decoder
         sequence_length = 4
         inpt = torch.zeros(1, BATCH_SIZE, HIDDEN_SIZE, dtype=torch.float)
@@ -246,9 +245,25 @@ class Tests(unittest.TestCase):
         out = model.forward(x)
         self.assertEqual(out.shape, (8,3))
 
+        e_word = 10
+        ones = np.ones((11,e_word))
+        x = torch.Tensor(ones)
+        model = Highway(e_word)
+        out = model.forward(x)
+        self.assertEqual(out.shape, (11,e_word))
+
         bad_input = torch.Tensor(np.ones((8,e_word+1)))
         with self.assertRaises(RuntimeError):
             model.forward(bad_input)
+
+    def test_highway_has_bias(self):
+        e_word = 3
+        ones = np.ones((8, e_word))
+        x = torch.Tensor(ones)
+        model = Highway(e_word)
+        self.assertEqual(model.gate.bias.shape[0], e_word)
+        self.assertEqual(model.proj.bias.shape[0], e_word)
+
 
     def test_cnn(self):
         e_word = 30
