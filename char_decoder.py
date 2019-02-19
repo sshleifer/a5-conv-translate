@@ -9,6 +9,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+import pickle
+def pickle_save(obj, path):
+    with open(path, 'wb') as f:
+        pickle.dump(obj, f)
 
 class CharDecoder(nn.Module):
     def __init__(self, hidden_size, char_embedding_size=50, target_vocab=None):
@@ -33,7 +37,7 @@ class CharDecoder(nn.Module):
 
         self.class_weights = torch.Tensor(np.ones(char_vocab_size))
         self.class_weights[0] = 0  # ignore pad chars
-        self.ce_loss_fn = nn.CrossEntropyLoss(weight=self.class_weights,
+        self.ce_loss_fn = nn.CrossEntropyLoss(#weight=self.class_weights,
                                               reduction='sum',
                                               ignore_index=0)
         self.softmax = nn.Softmax(dim=-1)
@@ -92,16 +96,24 @@ class CharDecoder(nn.Module):
         @returns The cross-entropy loss, computed as the *sum* of cross-entropy
         losses of all the words in the batch.
         """
-        loss_char_dec = 0
         # what if different than length expected by forward?
 
         target = char_sequence[1:]
         xinput = char_sequence[:-1]
-        st, ct = self.forward(xinput, dec_hidden)
+        st, ct = self.forward(xinput, dec_hidden)  # st -> (length, batch, self.vocab_size)
+        pickle_save(st, 'st.pkl')
+        pickle_save(target, 'target.pkl')
 
         #print(f'st: {st.shape}')
-        st_perm = st.permute(1, 2, 0).contiguous().view(-1, self.n_chars)
+        # maybe also possible permute(1, 2, 0)
+        st_perm = st.contiguous().view(-1, self.n_chars)
+
         reshaped_targ = target.contiguous().view(-1)
+
+        #print(f'st_perm.shape: {st_perm.shape}, reshaped_targ: {reshaped_targ.shape}')
+
+        #print(f'st_perm.shape: {st_perm}, reshaped_targ: {reshaped_targ.shape}')
+
         return self.ce_loss_fn(st_perm, reshaped_targ)
 
         ### YOUR CODE HERE for part 2c
@@ -121,8 +133,8 @@ class CharDecoder(nn.Module):
                               The decoded strings should NOT contain the start-of-word and end-of-word characters.
         """
         batch_size = initialStates[0].shape[1]
-        start_seed = np.array([self.target_vocab.start_of_word] * batch_size)
-        current_char = torch.tensor(start_seed, dtype=torch.long).to(device).reshape(1, batch_size)
+        start_seed = np.array([self.target_vocab.start_of_word] * batch_size).reshape(1, batch_size)
+        current_char = torch.tensor(start_seed, dtype=torch.long).to(device)
         output_word = []
         c = initialStates
         for t in range(max_length):

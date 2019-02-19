@@ -97,12 +97,9 @@ class TestEverything(unittest.TestCase):
     def test_question_1e_sanity_check(self):
         """ Sanity check for words2charindices function.
         """
-        print ("-"*80)
-        print("Running Sanity Check for Question 1e: words2charindices()")
-        print ("-"*80)
         vocab = VocabEntry()
 
-        print('Running test on small list of sentences')
+
         sentences = [["a", "b", "c?"], ["~d~", "c", "b", "a"]]
         small_ind = vocab.words2charindices(sentences)
         small_ind_gold = [[[1, 30, 2], [1, 31, 2], [1, 32, 70, 2]], [[1, 85, 33, 85, 2], [1, 32, 2], [1, 31, 2], [1, 30, 2]]]
@@ -122,15 +119,10 @@ class TestEverything(unittest.TestCase):
         tgt_ind_gold = pickle.load(open('./sanity_check_en_es_data/1e_tgt.pkl', 'rb'))
         assert(tgt_ind == tgt_ind_gold), "target vocab test resulted in indices list {:}, expected {:}".format(tgt_ind, tgt_ind_gold)
 
-        print("All Sanity Checks Passed for Question 1e: words2charindices()!")
-        print ("-"*80)
 
     def test_question_1f_sanity_check(self):
         """ Sanity check for pad_sents_char() function.
         """
-        print ("-"*80)
-        print("Running Sanity Check for Question 1f: Padding")
-        print ("-"*80)
         vocab = VocabEntry()
 
         print("Running test on a list of sentences")
@@ -145,17 +137,13 @@ class TestEverything(unittest.TestCase):
                 raise AssertionError(f'got {got}: expected: {expected}')
         assert padded_sentences == gold_padded_sentences, "Sentence padding is incorrect: it should be:\n {} but is:\n{}".format(gold_padded_sentences, padded_sentences)
 
-        print("Sanity Check Passed for Question 1f: Padding!")
-        print("-"*80)
 
 
     def test_question_1j_sanity_check(self):
         """ Sanity check for model_embeddings.py
             basic shape check
         """
-        print ("-"*80)
-        print("Running Sanity Check for Question 1j: Model Embedding")
-        print ("-"*80)
+
         sentence_length = 10
         max_word_length = 21
         inpt = torch.zeros(sentence_length, BATCH_SIZE, max_word_length, dtype=torch.long)
@@ -163,16 +151,11 @@ class TestEverything(unittest.TestCase):
         output = ME_source.forward(inpt)
         output_expected_size = [sentence_length, BATCH_SIZE, EMBED_SIZE]
         assert(list(output.size()) == output_expected_size), "output shape is incorrect: it should be:\n {} but is:\n{}".format(output_expected_size, list(output.size()))
-        print("Sanity Check Passed for Question 1j: Model Embedding!")
-        print("-"*80)
 
     def test_question_2a_sanity_check(self):
         """ Sanity check for CharDecoder.__init__()
             basic shape check
         """
-        print ("-"*80)
-        print("Running Sanity Check for Question 2a: CharDecoder.__init__()")
-        print ("-"*80)
         decoder = self.decoder
         char_vocab = self.char_vocab
         assert(decoder.charDecoder.input_size == EMBED_SIZE), "Input dimension is incorrect:\n it should be {} but is: {}".format(EMBED_SIZE, decoder.charDecoder.input_size)
@@ -181,16 +164,11 @@ class TestEverything(unittest.TestCase):
         assert(decoder.char_output_projection.out_features == len(char_vocab.char2id)), "Output dimension is incorrect:\n it should be {} but is: {}".format(len(char_vocab.char2id), decoder.char_output_projection.out_features)
         assert(decoder.decoderCharEmb.num_embeddings == len(char_vocab.char2id)), "Number of char_embeddings is incorrect:\n it should be {} but is: {}".format(len(char_vocab.char2id), decoder.decoderCharEmb.num_embeddings)
         assert(decoder.decoderCharEmb.embedding_dim == EMBED_SIZE), "Embedding dimension is incorrect:\n it should be {} but is: {}".format(EMBED_SIZE, decoder.decoderCharEmb.embedding_dim)
-        print("Sanity Check Passed for Question 2a: CharDecoder.__init__()!")
-        print("-"*80)
 
     def test_question_2b_sanity_check(self):
         """ Sanity check for CharDecoder.forward()
             basic shape check
         """
-        print ("-"*80)
-        print("Running Sanity Check for Question 2b: CharDecoder.forward()")
-        print ("-"*80)
         decoder = self.decoder
         char_vocab = self.char_vocab
         sequence_length = 4
@@ -201,8 +179,6 @@ class TestEverything(unittest.TestCase):
         assert(list(logits.size()) == logits_expected_size), "Logits shape is incorrect:\n it should be {} but is:\n{}".format(logits_expected_size, list(logits.size()))
         assert(list(dec_hidden1.size()) == dec_hidden_expected_size), "Decoder hidden state shape is incorrect:\n it should be {} but is: {}".format(dec_hidden_expected_size, list(dec_hidden1.size()))
         assert(list(dec_hidden2.size()) == dec_hidden_expected_size), "Decoder hidden state shape is incorrect:\n it should be {} but is: {}".format(dec_hidden_expected_size, list(dec_hidden2.size()))
-        print("Sanity Check Passed for Question 2b: CharDecoder.forward()!")
-        print("-"*80)
 
     def test_train_forward(self):
         sequence_length = 4
@@ -210,16 +186,16 @@ class TestEverything(unittest.TestCase):
         loss = decoder.train_forward(inpt)
         self.assertGreaterEqual(loss, 0)
 
-
-
-
     def test_question_2c_sanity_check_train_fwd(self):
         """ Sanity check for CharDecoder.train_forward()
             basic shape check
         """
         decoder = self.decoder
-        sequence_length = 4
-        inpt = torch.zeros(sequence_length, BATCH_SIZE, dtype=torch.long)
+        sequence_length = 6
+        inpt = np.ones((sequence_length, BATCH_SIZE,))
+        first_element = np.array([1, 6, 12, 12, 2, 0])
+        inpt[:,1] = first_element
+        inpt = torch.tensor(inpt, dtype=torch.long)
         #inpt = torch.zeros(sequence_length, BATCH_SIZE, HIDDEN_SIZE, dtype=torch.long)
         #inpt = torch.normal(mean=inpt, std=inpt+1)
 
@@ -230,26 +206,48 @@ class TestEverything(unittest.TestCase):
         preds = decoder.forward(inpt)
         #import ipdb; ipdb.set_trace()
         self.assertGreater(loss, 0)
-        self.assertGreaterEqual(10, loss)
+        #self.assertGreaterEqual(10, loss)
 
+
+    def test_decoder_loss_fn(self):
+
+        preds = torch.tensor([[.25, .25, .25, .25], [.25, .25, .25, .25]])
+        targets = torch.tensor([1, 1])
+        loss1 = self.decoder.ce_loss_fn(preds, targets)
+        print(f'loss1:{loss1:.4f}')
+
+    def test_ignore_index_in_loss(self):
+
+        preds = torch.tensor([[0., 1., 0., 0.], [.25, .25, .25, .25]])
+        targets = torch.tensor([1, 0])
+        loss2 = self.decoder.ce_loss_fn(preds, targets)
+        print(f'loss2:{loss2:.4f}')
+        loss3 = self.decoder.ce_loss_fn(preds[:1], targets[:1]) # doesnt consider 0 example
+        self.assertEqual(loss3, loss2)
+        #self.assertEqual(loss2, 0)
+
+
+    def test_reduction_sum_works(self):
+        preds = torch.tensor([[0., 1., 0., 0.], [.25, .25, .25, .25]])
+        targets = torch.tensor([1, 1])
+        loss_total = self.decoder.ce_loss_fn(preds, targets)
+        loss_a = self.decoder.ce_loss_fn(preds[1:], targets[1:])
+        loss_b = self.decoder.ce_loss_fn(preds[:1], targets[:1])
+        self.assertEqual(loss_total, loss_a + loss_b)
 
     def test_question_2d_sanity_check(self):
         """ Sanity check for CharDecoder.decode_greedy()
             basic shape check
         """
-        print ("-"*80)
-        print("Running Sanity Check for Question 2d: CharDecoder.decode_greedy()")
-        print ("-"*80)
+
         decoder = self.decoder
         sequence_length = 4
-        inpt = torch.zeros(sequence_length, BATCH_SIZE, HIDDEN_SIZE, dtype=torch.float)
+        inpt = torch.zeros(1, BATCH_SIZE, HIDDEN_SIZE, dtype=torch.float)
         inpt = torch.normal(mean=inpt, std=inpt+1)
         initialStates = (inpt, inpt)
         device = decoder.char_output_projection.weight.device
         decodedWords = decoder.decode_greedy(initialStates, device)
         assert(len(decodedWords) == BATCH_SIZE), "Length of decodedWords should be {} but is: {}".format(BATCH_SIZE, len(decodedWords))
-        print("Sanity Check Passed for Question 2d: CharDecoder.decode_greedy()!")
-        print("-"*80)
 
 
 MAX_WORD_LEN = 21
