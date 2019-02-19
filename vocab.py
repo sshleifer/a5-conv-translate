@@ -135,17 +135,10 @@ class VocabEntry(object):
         ###
         ###     You must prepend each word with the `start_of_word` character and append
         ###     with the `end_of_word` character.
-
-
-            ### END YOUR CODE
-        # if len(sents) > 0 and isinstance(sents[0], str):  # might be able to remove
-        #     sents = [sents]
-
         return [[
             [1] + [self.char2id[char] for char in w] + [2]
             for w in sent
         ] for sent in sents]
-
 
 
     def words2indices(self, sents):

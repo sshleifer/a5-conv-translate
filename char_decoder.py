@@ -21,16 +21,21 @@ class CharDecoder(nn.Module):
 
         super(CharDecoder, self).__init__()
         char_vocab_size = len(target_vocab.char2id)
+        self.n_chars = char_vocab_size
 
         self.charDecoder = nn.LSTM(input_size=char_embedding_size, hidden_size=hidden_size,
+                                   bidirectional=False,
                                    bias=True)
         self.char_output_projection = nn.Linear(hidden_size, char_vocab_size, bias=True)
         self.decoderCharEmb = nn.Embedding(char_vocab_size, char_embedding_size,
                                            padding_idx=0)
         self.target_vocab = target_vocab
+
         self.class_weights = torch.Tensor(np.ones(char_vocab_size))
         self.class_weights[0] = 0  # ignore pad chars
-        self.ce_loss_fn = nn.CrossEntropyLoss(weight=self.class_weights)
+        self.ce_loss_fn = nn.CrossEntropyLoss(weight=self.class_weights,
+                                              reduction='sum',
+                                              ignore_index=0)
         self.softmax = nn.Softmax(dim=-1)
 
 
@@ -63,6 +68,19 @@ class CharDecoder(nn.Module):
         st = self.char_output_projection(ht)
         return st, ct
 
+    def old_train_forward(self,char_sequence, dec_hidden=None):
+        st, ct = self.forward(char_sequence, dec_hidden)
+        pt = self.softmax(st)  # do we need to do softmax?
+        batch_size = char_sequence.shape[1]
+        loss_char_dec = 0
+
+        for b in range(batch_size):  # for every word in the batch
+            true_chars = char_sequence[:, b]
+            preds = pt[:, b]
+            loss_char_dec += self.ce_loss_fn(preds, true_chars)
+
+        return loss_char_dec
+
     def train_forward(self, char_sequence, dec_hidden=None):
         """ Forward computation during training.
 
@@ -76,14 +94,15 @@ class CharDecoder(nn.Module):
         """
         loss_char_dec = 0
         # what if different than length expected by forward?
-        st, ct = self.forward(char_sequence, dec_hidden)
-        pt = self.softmax(st)  # do we need to do softmax?
-        batch_size = char_sequence.shape[1]
-        for b in range(batch_size):  # for every word in the batch
-            true_chars = char_sequence[:, b]
-            preds = pt[:, b]
-            loss_char_dec = self.ce_loss_fn(preds, true_chars)
-        return loss_char_dec
+
+        target = char_sequence[1:]
+        xinput = char_sequence[:-1]
+        st, ct = self.forward(xinput, dec_hidden)
+
+        #print(f'st: {st.shape}')
+        st_perm = st.permute(1, 2, 0).contiguous().view(-1, self.n_chars)
+        reshaped_targ = target.contiguous().view(-1)
+        return self.ce_loss_fn(st_perm, reshaped_targ)
 
         ### YOUR CODE HERE for part 2c
         ### TODO - Implement training forward pass.
@@ -104,21 +123,20 @@ class CharDecoder(nn.Module):
         batch_size = initialStates[0].shape[1]
         start_seed = np.array([self.target_vocab.start_of_word] * batch_size)
         current_char = torch.tensor(start_seed, dtype=torch.long).to(device).reshape(1, batch_size)
-        #  print(f'current_char: {current_char.shape}')
         output_word = []
         c = initialStates
         for t in range(max_length):
             st, c = self.forward(current_char, c)
             pt = self.softmax(st)
+            # set pad idx to negative inf
 
             if t == 0:
                 print(f'pt: {pt.shape}')
                 print(f'current_char: {current_char.shape}')
-            max_val, current_char = torch.max(pt, dim=-1)
+            current_char = torch.argmax(pt, dim=-1)
             output_word.append([self.target_vocab.id2char[x]
                                 for x in current_char.detach().numpy()[0]])
         words = self.clip_from_end_char(output_word)
-
         return [''.join(w) for w in words]
             #h, c = self.forward()
 
