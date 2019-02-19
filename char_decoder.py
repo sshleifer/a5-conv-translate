@@ -130,7 +130,7 @@ class CharDecoder(nn.Module):
             # set pad idx to negative inf
 
             current_char = torch.argmax(pt, dim=-1)
-            loop_over = current_char.squeeze(dim=0).numpy()
+            loop_over = current_char.squeeze(dim=0).cpu().numpy()
             output_word.append([self.target_vocab.id2char[x] for x in loop_over])
         words = self.clip_from_end_char(output_word)
         return [''.join(w) for w in words]
