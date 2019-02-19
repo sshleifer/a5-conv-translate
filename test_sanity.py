@@ -134,10 +134,8 @@ class TestEverything(unittest.TestCase):
         assert len(gold_padded_sentences) == len(padded_sentences)
         for expected, got in zip(gold_padded_sentences, padded_sentences):
             if got != expected:
-                raise AssertionError(f'got {got}: expected: {expected}')
+                raise AssertionError('got {}: expected: {}'.format(got, expected))
         assert padded_sentences == gold_padded_sentences, "Sentence padding is incorrect: it should be:\n {} but is:\n{}".format(gold_padded_sentences, padded_sentences)
-
-
 
     def test_question_1j_sanity_check(self):
         """ Sanity check for model_embeddings.py
@@ -196,32 +194,18 @@ class TestEverything(unittest.TestCase):
         first_element = np.array([1, 6, 12, 12, 2, 0])
         inpt[:,1] = first_element
         inpt = torch.tensor(inpt, dtype=torch.long)
-        #inpt = torch.zeros(sequence_length, BATCH_SIZE, HIDDEN_SIZE, dtype=torch.long)
-        #inpt = torch.normal(mean=inpt, std=inpt+1)
 
 
         loss = decoder.train_forward(inpt)
-        # "Loss should be a scalar but its shape is: {}".format(list(loss.size()))
         self.assertEqual(list(loss.size()), [])
-        preds = decoder.forward(inpt)
-        #import ipdb; ipdb.set_trace()
         self.assertGreater(loss, 0)
-        #self.assertGreaterEqual(10, loss)
 
-
-    def test_decoder_loss_fn(self):
-
-        preds = torch.tensor([[.25, .25, .25, .25], [.25, .25, .25, .25]])
-        targets = torch.tensor([1, 1])
-        loss1 = self.decoder.ce_loss_fn(preds, targets)
-        print(f'loss1:{loss1:.4f}')
 
     def test_ignore_index_in_loss(self):
 
         preds = torch.tensor([[0., 1., 0., 0.], [.25, .25, .25, .25]])
         targets = torch.tensor([1, 0])
         loss2 = self.decoder.ce_loss_fn(preds, targets)
-        print(f'loss2:{loss2:.4f}')
         loss3 = self.decoder.ce_loss_fn(preds[:1], targets[:1]) # doesnt consider 0 example
         self.assertEqual(loss3, loss2)
         #self.assertEqual(loss2, 0)

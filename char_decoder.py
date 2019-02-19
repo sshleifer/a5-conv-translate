@@ -9,11 +9,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-import pickle
-def pickle_save(obj, path):
-    with open(path, 'wb') as f:
-        pickle.dump(obj, f)
-
 class CharDecoder(nn.Module):
     def __init__(self, hidden_size, char_embedding_size=50, target_vocab=None):
         """ Init Character Decoder.
@@ -101,18 +96,10 @@ class CharDecoder(nn.Module):
         target = char_sequence[1:]
         xinput = char_sequence[:-1]
         st, ct = self.forward(xinput, dec_hidden)  # st -> (length, batch, self.vocab_size)
-        pickle_save(st, 'st.pkl')
-        pickle_save(target, 'target.pkl')
-
-        #print(f'st: {st.shape}')
-        # maybe also possible permute(1, 2, 0)
         st_perm = st.contiguous().view(-1, self.n_chars)
 
         reshaped_targ = target.contiguous().view(-1)
 
-        #print(f'st_perm.shape: {st_perm.shape}, reshaped_targ: {reshaped_targ.shape}')
-
-        #print(f'st_perm.shape: {st_perm}, reshaped_targ: {reshaped_targ.shape}')
 
         return self.ce_loss_fn(st_perm, reshaped_targ)
 
@@ -142,15 +129,11 @@ class CharDecoder(nn.Module):
             pt = self.softmax(st)
             # set pad idx to negative inf
 
-            if t == 0:
-                print(f'pt: {pt.shape}')
-                print(f'current_char: {current_char.shape}')
             current_char = torch.argmax(pt, dim=-1)
             output_word.append([self.target_vocab.id2char[x]
                                 for x in current_char.detach().numpy()[0]])
         words = self.clip_from_end_char(output_word)
         return [''.join(w) for w in words]
-            #h, c = self.forward()
 
         ### YOUR CODE HERE for part 2d
         ### TODO - Implement greedy decoding.

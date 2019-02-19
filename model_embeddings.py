@@ -65,21 +65,16 @@ class ModelEmbeddings(nn.Module):
         # We want to make sure we are convolving over sentences not the ith word of every sentence
         # so maybe we should: Transpose to get the batch dim in front
         # Transpose(3,2) equivalent?
-        #print(f'char_emb.shape: {char_emb.shape}')
         x_reshaped = char_emb.permute(0, 1, 3, 2)
-        #print(f'x_reshaped: {x_reshaped.shape}')
-
+        # now combine axes 0 and 1 into 1 axis
         x_reshaped = x_reshaped.reshape(
             sentence_length * batch_size, e_char, max_word_length)
-        #print(f'x_reshaped: {x_reshaped.shape}')
-        #(sentence_length * batch_size, e_char, max_word_length)
+
         # need inputs like (batch_size, e_char, m_word) for conv
-        xconv_out = self.cnn.forward(x_reshaped)#.transpose(1, 2))
+        xconv_out = self.cnn.forward(x_reshaped)
         output = self.highway.forward(xconv_out)
         e_word = xconv_out.shape[-1]
         assert e_word == self.embed_size
-        #output = output.reshape(sentence_length, batch_size, e_word) # ideally
-        #assert output.shape == (sentence_length, batch_size, e_word)
         return self.dropout(output).reshape(sentence_length, batch_size, self.embed_size)
         # right place for dropout?
 
