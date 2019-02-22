@@ -245,6 +245,7 @@ class Tests(unittest.TestCase):
         out = model.forward(x)
         self.assertEqual(out.shape, (8,3))
 
+
         e_word = 10
         ones = np.ones((11,e_word))
         x = torch.Tensor(ones)
@@ -255,6 +256,11 @@ class Tests(unittest.TestCase):
         bad_input = torch.Tensor(np.ones((8,e_word+1)))
         with self.assertRaises(RuntimeError):
             model.forward(bad_input)
+
+        same_input_different_batch_size = torch.Tensor(np.ones((10, e_word )))
+
+        model.forward(same_input_different_batch_size)
+
 
     def test_highway_has_bias(self):
         e_word = 3
