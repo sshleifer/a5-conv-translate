@@ -16,7 +16,6 @@ class CNN(nn.Module):
         self.e_word = eword
         self.conv = nn.Conv1d(
             in_channels=echar, out_channels=eword, kernel_size=k,
-            #bias=True,
             stride=1,
         )
         assert self.conv.weight.shape == (eword, echar, k)
@@ -30,9 +29,4 @@ class CNN(nn.Module):
         assert xconv.shape == (x.shape[0], self.e_word, m_word - self.k + 1)
         out = self.max_pool(xconv)
         squoze = out.squeeze(-1)  # (batch_size, e_word)
-        # print(f'CNN: squoze.shape: {squoze.shape}, desired: {(x.shape[0], self.e_word)}')
         return squoze # we want fx m_word -k + 1
-
-
-
-
